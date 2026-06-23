@@ -10,7 +10,9 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from app.database.connection import close_db, connect_db
+
 from app.routes.pitch_routes import router as pitch_router
+from app.routes.auth_routes import router as auth_router
 
 load_dotenv()
 
@@ -86,6 +88,7 @@ async def rate_limit_middleware(request: Request, call_next):
 
 
 app.include_router(pitch_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
