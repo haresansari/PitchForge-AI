@@ -4,11 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
-from app.database.connection import connect_db
-
-@app.on_event("startup")
-def startup():
-    connect_db()
+import certifi
 
 
 
@@ -29,7 +25,12 @@ def connect_db():
         return None
 
     try:
-        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=4000)
+        client = MongoClient(
+    MONGODB_URI,
+    tls=True,
+    tlsCAFile=certifi.where(),
+    serverSelectionTimeoutMS=10000
+)
         client.admin.command("ping")
         db = client[DATABASE_NAME]
         db.pitches.create_index("created_at")

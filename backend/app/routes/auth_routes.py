@@ -17,8 +17,6 @@ router = APIRouter(
 
 users = []
 
-db = get_db()
-print("DB =", db)
 @router.get("/test")
 def test_auth():
     return {
@@ -26,6 +24,14 @@ def test_auth():
     }
 @router.post("/signup")
 def signup(user: UserSignup):
+
+    db = get_db()
+
+    if db is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Database not connected"
+        )
 
     user_collection = db["users"]
 
@@ -53,6 +59,15 @@ def signup(user: UserSignup):
     }
 @router.post("/login")
 def login(user: UserLogin):
+
+    db = get_db()
+
+    if db is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Database not connected"
+        )
+
     user_collection = db["users"]
 
     existing_user = user_collection.find_one(

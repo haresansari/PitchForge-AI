@@ -5,6 +5,10 @@ import random
 import re
 from typing import Any
 
+import google.generativeai as genai
+import os
+
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -200,3 +204,7 @@ Pitch: {json.dumps(pitch_data, default=str)}
             "scalability_score": 70 + (seed // 5) % 20,
             "investor_appeal_score": 71 + (seed // 7) % 18,
         }
+
+
+# def generate_pitch(idea: str):
+#    pass
