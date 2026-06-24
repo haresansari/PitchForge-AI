@@ -4,6 +4,13 @@ from typing import Optional
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
+from app.database.connection import connect_db
+
+@app.on_event("startup")
+def startup():
+    connect_db()
+
+
 
 load_dotenv()
 

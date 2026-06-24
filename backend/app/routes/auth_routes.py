@@ -2,6 +2,7 @@ from app.services.auth_service import hash_password, verify_password
 from fastapi import APIRouter, HTTPException, Header
 from app.models.auth_models import UserSignup, UserLogin
 from fastapi import Query
+from app.database.connection import get_db
 from app.services.auth_service import (
     hash_password,
     verify_password,
@@ -16,6 +17,8 @@ router = APIRouter(
 
 users = []
 
+db = get_db()
+print("DB =", db)
 @router.get("/test")
 def test_auth():
     return {
@@ -24,20 +27,25 @@ def test_auth():
 @router.post("/signup")
 def signup(user: UserSignup):
 
-    for existing_user in users:
-        if existing_user["email"] == user.email:
-            raise HTTPException(
-                status_code=400,
-                detail="Email already registered"
-            )
+    user_collection = db["users"]
+
+    existing_user = user_collection.find_one(
+        {"email": user.email}
+    )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
 
     hashed_password = hash_password(user.password)
 
-    users.append({
-        "name": user.name,
-        "email": user.email,
-        "password": hashed_password
-    })
+    user_collection.insert_one({
+    "name": user.name,
+    "email": user.email,
+    "password": hashed_password
+})
 
     return {
         "success": True,
@@ -45,34 +53,35 @@ def signup(user: UserSignup):
     }
 @router.post("/login")
 def login(user: UserLogin):
+    user_collection = db["users"]
 
-    for existing_user in users:
-
-        if existing_user["email"] == user.email:
-
-            if verify_password(
-                user.password,
-                existing_user["password"]
-            ):
-
-                token = create_access_token(
-                    {"sub": user.email}
-                )
-
-                return {
-                    "access_token": token,
-                    "token_type": "bearer"
-                }
-
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid password"
-            )
-
-    raise HTTPException(
-        status_code=404,
-        detail="User not found"
+    existing_user = user_collection.find_one(
+        {"email": user.email}
     )
+
+    if not existing_user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    if not verify_password(
+        user.password,
+        existing_user["password"]
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid password"
+        )
+
+    token = create_access_token(
+        {"sub": user.email}
+    )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
+    }
 @router.get("/profile")
 def profile(token: str = Query(None)):
 
